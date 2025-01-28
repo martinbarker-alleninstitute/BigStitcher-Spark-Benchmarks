@@ -98,6 +98,7 @@ import scala.Tuple3;
 import scala.Tuple4;
 import util.Grid;
 import util.URITools;
+import net.preibisch.bigstitcher.spark.util.LogUtil;
 
 public class SparkInterestPointDetection extends AbstractSelectableViews implements Callable<Void>, Serializable
 {
@@ -166,7 +167,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 	{
 		if ( maxSpotsPerOverlap && ( !overlappingOnly || maxSpots <= 0 ) )
 		{
-			System.out.println( "--maxSpotsPerOverlap only works when --overlappingOnly AND --maxSpots is set.");
+			LogUtil.println( "--maxSpotsPerOverlap only works when --overlappingOnly AND --maxSpots is set.");
 			System.exit( 0 );
 		}
 
@@ -201,24 +202,24 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 		final boolean storeIntensities = this.storeIntensities;
 		final Integer medianFilter = this.medianFilter;
 
-		System.out.println( "label: " + label );
-		System.out.println( "sigma: " + sigma );
-		System.out.println( "threshold: " + threshold );
-		System.out.println( "type: " + type );
-		System.out.println( "localization: " + localization );
-		System.out.println( "minIntensity: " + minIntensity );
-		System.out.println( "maxIntensity: " + maxIntensity );
-		System.out.println( "downsampleXY: " + downsampleXY );
-		System.out.println( "downsampleZ: " + downsampleZ );
-		System.out.println( "overlappingOnly: " + onlyOverlappingRegions );
-		System.out.println( "prefetching: " + prefetch );
+		LogUtil.println( "label: " + label );
+		LogUtil.println( "sigma: " + sigma );
+		LogUtil.println( "threshold: " + threshold );
+		LogUtil.println( "type: " + type );
+		LogUtil.println( "localization: " + localization );
+		LogUtil.println( "minIntensity: " + minIntensity );
+		LogUtil.println( "maxIntensity: " + maxIntensity );
+		LogUtil.println( "downsampleXY: " + downsampleXY );
+		LogUtil.println( "downsampleZ: " + downsampleZ );
+		LogUtil.println( "overlappingOnly: " + onlyOverlappingRegions );
+		LogUtil.println( "prefetching: " + prefetch );
 		if ( maxSpots > 0 ) {
-			System.out.println( "maxSpots: " + maxSpots );
-			System.out.println( "maxSpotsPerOverlap: " + maxSpotsPerOverlap );
+			LogUtil.println( "maxSpots: " + maxSpots );
+			LogUtil.println( "maxSpotsPerOverlap: " + maxSpotsPerOverlap );
 		}
-		System.out.println( "blockSize: " + Util.printCoordinates( blockSize ) );
-		System.out.println( "medianFilter: " + medianFilter );
-		System.out.println( "storeIntensities: " + storeIntensities );
+		LogUtil.println( "blockSize: " + Util.printCoordinates( blockSize ) );
+		LogUtil.println( "medianFilter: " + medianFilter );
+		LogUtil.println( "storeIntensities: " + storeIntensities );
 
 		//
 		// assemble all intervals that need to be processed
@@ -282,7 +283,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 						final long size = ViewUtil.size( intersection );
 
 						//System.out.println( "intersectionBoxes=" + Util.printInterval( intersectionBoxes ) );
-						System.out.println( "intersection=" + Util.printInterval( intersection ) + ", size (#px)=" + size );
+						LogUtil.println( "intersection=" + Util.printInterval( intersection ) + ", size (#px)=" + size );
 
 						maxIntervalSize = Math.max( maxIntervalSize, size );
 
@@ -305,7 +306,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 		//
 		final ArrayList< Tuple3<int[], long[], long[][] > > sparkProcess = new ArrayList<>();
 
-		System.out.println( "The following intervals will be processed:");
+		LogUtil.println( "The following intervals will be processed:");
 
 		for ( final Pair< ViewId, Interval > pair : toProcess )
 		{
@@ -322,11 +323,11 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 				final long[] superBlockMax = new long[ intervalOffset.length ];
 				Arrays.setAll( superBlockMax, d -> superBlockMin[ d ] + gridEntry[ 1 ][ d ] - 1 );
 
-				System.out.println( "Processing " + Group.pvid(pair.getA()) + ", " + Util.printInterval( new FinalInterval(superBlockMin, superBlockMax) ) + " of full interval " + Util.printInterval( pair.getB() ) );
+				LogUtil.println( "Processing " + Group.pvid(pair.getA()) + ", " + Util.printInterval( new FinalInterval(superBlockMin, superBlockMax) ) + " of full interval " + Util.printInterval( pair.getB() ) );
 			});
 		}
 
-		System.out.println( "Total number of jobs: " + sparkProcess.size() );
+		LogUtil.println( "Total number of jobs: " + sparkProcess.size() );
 		
 		final SparkConf conf = new SparkConf().setAppName("SparkInterestPointDetection");
 
@@ -402,7 +403,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 						new long[] { dog.downsampleXY, dog.downsampleXY, dog.downsampleZ },
 						true );
 
-			System.out.println( "Processing " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " of full interval " + Util.printInterval( input.getA() ) );
+			LogUtil.println( "Processing " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " of full interval " + Util.printInterval( input.getA() ) );
 
 			if ( prefetch )
 			{
@@ -415,7 +416,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 				// that finds which blocks need to be prefetched from an input image
 				final List< PrefetchPixel< ? > > prefetchBlocks = ViewUtil.findOverlappingBlocks( data, viewId, input.getB().inverse(), processInterval, maxKernelSize );
 
-				System.out.println( "Prefetching " + prefetchBlocks.size() + " blocks for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) );
+				LogUtil.println( "Prefetching " + prefetchBlocks.size() + " blocks for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) );
 
 				final ExecutorService prefetchExecutor = Executors.newCachedThreadPool(); //Executors.newFixedThreadPool( SparkAffineFusion.N_PREFETCH_THREADS );
 				prefetchExecutor.invokeAll( prefetchBlocks );
@@ -462,7 +463,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 
 			if ( ips == null || ips.size() == 0 )
 			{
-				System.out.println( "No interest points found for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) );
+				LogUtil.println( "No interest points found for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) );
 				return new Tuple4<>( serializedInput._1(), Spark.serializeInterval( processInterval ), null, null );
 			}
 
@@ -470,7 +471,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 
 			if ( storeIntensities || maxSpots > 0 )
 			{
-				System.out.println( "Retrieving intensities for interest points '" + label + "' for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " ... " );
+				LogUtil.println( "Retrieving intensities for interest points '" + label + "' for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " ... " );
 
 				// for image interpolation
 				final RealRandomAccessible<FloatType> rra = Views.interpolate(
@@ -496,7 +497,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 			}
 
 			// correcting for downsampling
-			System.out.println( "Correcting interest points '" + label + "', " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " for downsampling ... " );
+			LogUtil.println( "Correcting interest points '" + label + "', " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " for downsampling ... " );
 
 			DownsampleTools.correctForDownsampling( ips, input.getB() );
 
@@ -505,7 +506,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 			for ( int i = 0; i < ips.size(); ++i )
 				points[ i ] = ips.get( i ).getL();
 
-			System.out.println( "Returning " + ips.size() + " interest points '" + label + "' for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " ... " );
+			LogUtil.println( "Returning " + ips.size() + " interest points '" + label + "' for " + Group.pvid(viewId) + ", " + Util.printInterval( processInterval ) + " ... " );
 
 			// return ViewId, interval, locations, intensities
 			return new Tuple4<>( serializedInput._1(), Spark.serializeInterval( processInterval ), points, intensities );
@@ -519,7 +520,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 
 		sc.close();
 
-		System.out.println( "Computed all interest points, statistics:" );
+		LogUtil.println( "Computed all interest points, statistics:" );
 
 		// assemble all interest point intervals per ViewId
 		final HashMap< ViewId, List< List< InterestPoint > > > interestPointsPerViewId = new HashMap<>();
@@ -602,11 +603,11 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 					{
 						final int oldSize = tuple._2().size();
 						filterPoints( tuple._2(), tuple._3(), myMaxSpots );
-						System.out.println( "Filtered interval (limit=" + myMaxSpots + ") " + Util.printInterval( tuple._1() ) + " (" + Group.pvid( viewId ) + "): " + oldSize + " >>> " + tuple._2().size() );
+						LogUtil.println( "Filtered interval (limit=" + myMaxSpots + ") " + Util.printInterval( tuple._1() ) + " (" + Group.pvid( viewId ) + "): " + oldSize + " >>> " + tuple._2().size() );
 					}
 					else
 					{
-						System.out.println( "NOT filtered interval (limit=" + myMaxSpots + ") " + Util.printInterval( tuple._1() ) + " (" + Group.pvid( viewId ) + "): " + tuple._2().size() );
+						LogUtil.println( "NOT filtered interval (limit=" + myMaxSpots + ") " + Util.printInterval( tuple._1() ) + " (" + Group.pvid( viewId ) + "): " + tuple._2().size() );
 					}
 
 					interestPointsPerViewId.get( viewId ).add( tuple._2() );
@@ -679,7 +680,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 				for ( int id = 0; id < myIps.size(); ++id )
 					myIpsNewId.add( new InterestPoint( id, myIps.get( id ).getL() ) );
 
-				System.out.println( Group.pvid( viewId ) + ": " + myIpsNewId.size() );
+				LogUtil.println( Group.pvid( viewId ) + ": " + myIpsNewId.size() );
 
 				if ( !maxSpotsPerOverlap && maxSpots > 0 && maxSpots < myIpsNewId.size() )
 				{
@@ -703,7 +704,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 						myIpsNewId.add( new InterestPoint( i, combinedList.get( i ).getB().getL() ) ); // new id's again ...
 					}
 					*/
-					System.out.println( Group.pvid( viewId ) + " (after applying maxSpots): " + myIpsNewId.size() );
+					LogUtil.println( Group.pvid( viewId ) + " (after applying maxSpots): " + myIpsNewId.size() );
 				}
 
 				interestPoints.put(viewId, myIpsNewId);
@@ -713,7 +714,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 			}
 			else
 			{
-				System.out.println( Group.pvid( viewId ) + ": no points found." );
+				LogUtil.println( Group.pvid( viewId ) + ": no points found." );
 			}
 		}
 
@@ -722,7 +723,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 			// save interest points
 			for ( final ViewId viewId : viewIds )
 			{
-				System.out.println( "Saving interest point '" + label + "' N5 for " + Group.pvid(viewId) + " ... " );
+				LogUtil.println( "Saving interest point '" + label + "' N5 for " + Group.pvid(viewId) + " ... " );
 				
 				final InterestPoints ipl = InterestPoints.newInstance( dataGlobal.getBasePathURI(), viewId, label );
 	
@@ -735,7 +736,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 				// store image intensities for interest points
 				if ( storeIntensities )
 				{
-					System.out.println( "Retrieving intensities for interest points '" + label + "' for " + Group.pvid(viewId) + " ... " );
+					LogUtil.println( "Retrieving intensities for interest points '" + label + "' for " + Group.pvid(viewId) + " ... " );
 
 					final InterestPointsN5 i = (InterestPointsN5)ipl;
 
@@ -786,12 +787,12 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 	
 			InterestPointTools.addInterestPoints( dataGlobal, label, interestPoints, params );
 
-			System.out.println( "Saving XML (metadata only) ..." );
+			LogUtil.println( "Saving XML (metadata only) ..." );
 	
 			new XmlIoSpimData2().save( dataGlobal, xmlURI );
 		}
 
-		System.out.println( "Done ..." );
+		LogUtil.println( "Done ..." );
 
 		return null;
 	}
@@ -954,7 +955,7 @@ public class SparkInterestPointDetection extends AbstractSelectableViews impleme
 
 	public static void main(final String... args)
 	{
-		System.out.println(Arrays.toString(args));
+		LogUtil.println(Arrays.toString(args));
 		System.exit(new CommandLine(new SparkInterestPointDetection()).execute(args));
 	}
 }

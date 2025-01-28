@@ -33,6 +33,7 @@ import net.preibisch.bigstitcher.spark.util.Spark;
 import net.preibisch.mvrecon.fiji.spimdata.SpimData2;
 import picocli.CommandLine.Option;
 import util.URITools;
+import net.preibisch.bigstitcher.spark.util.LogUtil;
 
 public abstract class AbstractBasic implements Callable<Void>, Serializable
 {
@@ -52,7 +53,7 @@ public abstract class AbstractBasic implements Callable<Void>, Serializable
 
 	public SpimData2 loadSpimData2() throws SpimDataException
 	{
-		System.out.println( "xml: " + (xmlURI = URITools.toURI(xmlURIString)) );
+		LogUtil.println( "xml: " + (xmlURI = URITools.toURI(xmlURIString)) );
 		final SpimData2 dataGlobal = Spark.getSparkJobSpimData2( xmlURI );
 
 		return dataGlobal;

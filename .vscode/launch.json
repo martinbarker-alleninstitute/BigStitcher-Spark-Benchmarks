@@ -1,0 +1,57 @@
+{
+    // Use IntelliSense to learn about possible attributes. 
+    // Hover to view descriptions of existing attributes. 
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387 
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug SparkResaveN5",
+            "request": "launch",
+            "mainClass": "net.preibisch.bigstitcher.spark.SparkResaveN5",
+            "projectName": "BigStitcher-Spark",
+            "args": "-x /mnt/c/Users/marti/Documents/Allen/repos/Rhapso-Sample-Data/IP_TIFF_XML/dataset.xml -xo /mnt/c/Users/marti/Documents/Allen/repos/Rhapso-Sample-Data/IP_TIFF_XML/new_dataset.xml"
+        },
+        {
+            "type": "java",
+            "name": "Debug SparkInterestPointDetection",
+            "request": "launch",
+            "mainClass": "net.preibisch.bigstitcher.spark.SparkInterestPointDetection",
+            "projectName": "BigStitcher-Spark",
+            "vmArgs": "-Dspark.master=local[*]",
+            "args": [
+                "--localSparkBindAddress",
+                "-x",
+                "/mnt/c/Users/marti/Documents/Allen/repos/Rhapso-Sample-Data/TIFF XML (unaligned)/IP_TIFF_XML (detect)/dataset.xml",
+                "-l",
+                "beads",
+                "-s",
+                "1.8",
+                "-t",
+                "0.008",
+                "-dsxy",
+                "2",
+                "--minIntensity",
+                "0",
+                "--maxIntensity",
+                "255"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "Debug SparkGeometricDescriptorMatching",
+            "request": "launch",
+            "mainClass": "net.preibisch.bigstitcher.spark.SparkGeometricDescriptorMatching",
+            "projectName": "BigStitcher-Spark",
+            "args": "-x '/mnt/c/Users/marti/Documents/Allen/repos/Rhapso-Sample-Data/TIFF XML (unaligned)/IP_TIFF_XML/dataset.xml' -l beads -m FAST_ROTATION --clearCorrespondences"
+        },
+        {
+            "type": "java",
+            "name": "Debug Solver",
+            "request": "launch",
+            "mainClass": "net.preibisch.bigstitcher.spark.Solver",
+            "projectName": "BigStitcher-Spark",
+            "args": "-x /mnt/c/Users/marti/Documents/Allen/repos/Rhapso-Sample-Data/IP_TIFF_XML/new_dataset.xml -s IP -l beads"
+        }
+    ]
+}
